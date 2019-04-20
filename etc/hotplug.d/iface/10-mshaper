@@ -1,0 +1,8 @@
+#!/bin/sh
+
+/usr/bin/logger "mshaper" "TEST => $INTERFACE: $ACTION";
+
+case "$INTERFACE" in 
+    "eth"* |  "wl"*) [ "$ACTION" = ifup ] && { /etc/init.d/mshaper restart; /usr/bin/logger "mshaper" "$INTERFACE: $ACTION"; };; 
+    *) ;; 
+esac

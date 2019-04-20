@@ -1,0 +1,20 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006 OpenWrt.org
+
+START=75
+
+start() {
+    /usr/bin/mshaper start 2> /dev/null
+}
+
+stop() {
+    /usr/bin/mshaper stop 2> /dev/null
+}
+
+restart() {
+    /usr/bin/mshaper start 2> /dev/null
+}
+
+reload() {
+    /usr/bin/mshaper reload 2> /dev/null
+}

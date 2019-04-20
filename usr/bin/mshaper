@@ -1,0 +1,311 @@
+#!/bin/sh  
+
+. /lib/functions.sh
+
+appName="mShaper"
+
+startIFB=3
+
+quantum=1514
+burst=15k
+perturb=10
+
+config_load mshaper
+
+createIfbInterface() {
+    local ifb="ifb$1"
+
+    ip link add name $ifb type ifb
+    ip link set dev $ifb up
+
+    logger -t "$mShaper" "createIfbInterface $ifb ok!"
+}
+
+removeIfbIterface() {
+    local ifb="ifb$1"
+    
+    ip link set dev $ifb down
+    ip link del $ifb 
+
+    logger -t "$mShaper" "removeIfbIterface $ifb ok!"
+}
+
+
+removeInterfaceTc() {
+    local interface="$1"
+
+    tc qdisc del dev $interface root
+    tc qdisc del dev $interface ingress
+
+    logger -t "$mShaper" "removeInterfaceTc $interface ok!"
+}
+
+# uplink
+
+setTcInterfaceEgress() {
+    local interface="$1"
+
+    if [ -z "$interface" ]; then 
+        logger -t "$mShaper" "setTcInterfaceEgress: empty interface name." 
+        exit 1
+    fi
+
+    tc qdisc add dev $interface root handle 1: htb default 1
+
+    logger -t "$mShaper" "setTcInterfaceEgress $interface ok!"
+}
+
+setTcFirstClassEgress() {
+    local dev="$1"
+    local tot_up="$2"
+
+    if [ -z "$dev" ] || [ -z "$tot_up" ]; then 
+        logger -t "$mShaper" "setTcFirstClassEgress: empty param [$dev] [$tot_up]." 
+        exit 1
+    fi
+
+    tc class add dev $dev parent 1: classid 1:1 htb rate ${tot_up} quantum $quantum burst $burst
+
+    logger -t "$mShaper" "setTcFirstClassEgress $dev ok!"
+}
+
+setTcClassEgress() {
+    local dev="$1"
+    local flowId="$2"
+    local uplink="$3"
+    
+    if [ -z "$dev" ] || [ -z "$flowId" ] || [ -z "$uplink" ]; then 
+        logger -t "$mShaper" "setTcClassEgress: empty param [$dev] [$flowId] [$uplink]." 
+        exit 1
+    fi
+
+    tc class add dev $dev parent 1: classid 1:1${flowId} htb rate ${uplink} quantum $quantum burst $burst
+    tc qdisc add dev $dev parent 1:1${flowId} handle 1${flowId}: sfq perturb $perturb
+
+    logger -t "$mShaper" "setTcClassEgress $dev ok!"
+}
+
+setTcFilterEgress() {
+    local dev=$1
+    local flowid=$2
+    local ip=$3
+    local subnetmask=$4
+    local mac=$3
+
+    local tc="tc filter add dev $dev protocol ip parent 1: u32"
+
+    if [ -z $ip ] || [ -z $subnetmask ]; then
+        if [ ${#mac} -eq 17 ]; then
+            local oldIFS=$IFS
+            IFS=":"        
+            set -- $mac
+
+            # 0x0800 ipv4
+            local tc="$tc match u16 0x$1$2 0xffff at -14 match u32 0x$3$4$5$6 0xffffffff at -12 match u16 0x0800 0xFFFF at -2 "
+            
+            IFS=$oldIFS
+        else 
+            logger -t "$mShaper" "setTcFilterEgress: wrong mac/ip [$ip] [$subnetmask] [$mac]." 
+            exit 1
+        fi
+    else
+        local tc="$tc match ip dst $ip/$subnetmask "
+    fi
+
+    eval "$tc flowid 1:1$flowid"
+
+    logger -t "$mShaper" "setTcFilterEgress $dev ok!"
+}
+
+# downlink
+
+setTcInterfaceIngress() {
+    local interface="$1"
+    local ifb="ifb$2"
+
+    if [ -z "$interface" ]; then 
+        logger -t "$mShaper" "setTcInterfaceIngress: empty interface name." 
+        exit 1
+    fi
+
+    if [ -z "$interface" ]; then 
+        logger -t "$mShaper" "setTcInterfaceIngress: empty ifb." 
+        exit 1
+    fi
+
+    tc qdisc add dev $interface handle ffff: ingress
+    tc filter add dev $interface parent ffff: protocol ip u32 match u32 0 0 action mirred egress redirect dev $ifb
+
+    tc qdisc add dev $ifb root handle 3: htb default 1
+
+    logger -t "$mShaper" "setTcInterfaceIngress $interface $ifb ok!"
+}
+
+setTcFirstClassIngress() {
+    local ifb="ifb$1"
+    local tot_dl="$2"
+
+    if [ -z "$1" ] || [ -z "$tot_dl" ]; then 
+        logger -t "$mShaper" "setTcFirstClassIngress: empty param [$ifb] [$tot_dl]." 
+        exit 1
+    fi
+    
+    tc class add dev $ifb parent 3: classid 3:1 htb rate ${tot_dl} quantum $quantum burst $burst
+
+    logger -t "$mShaper" "setTcFirstClassIngress $ifb ok!"
+}
+
+setTcClassIngress() {
+    local ifb="ifb$1"
+    local flowId="$2"
+    local downlink="$3"
+
+    if [ -z "$1" ] || [ -z "$flowId" ] || [ -z "$downlink" ]; then 
+        logger -t "$mShaper" "setTcClassEgress: empty param [$ifb] [$flowId] [$downlink]." 
+        exit 1
+    fi
+
+    tc class add dev $ifb parent 3: classid 3:1${flowId} htb rate ${downlink} quantum $quantum burst $burst
+    tc qdisc add dev $ifb parent 3:1${flowId} handle 1${flowId}: sfq perturb $perturb
+
+    logger -t "$mShaper" "setTcClassIngress $ifb ok!"
+}
+
+setTcFilterIngress() {
+    local ifb="ifb$1"
+    local flowid="$2"
+    local ip="$3"
+    local subnetmask="$4"
+    local mac="$3"
+
+    local tc="tc filter add dev $ifb protocol ip parent 3:0 u32"
+
+    if [ -z $ip ] || [ -z $subnetmask ]; then
+        if [ ${#mac} -eq 17 ]; then
+            local oldIFS=$IFS
+            IFS=":"        
+            set -- $mac
+            
+            # 0x0800 ipv4
+            local tc="$tc match u32 0x$1$2$3$4 0xffffffff at -8 match u16 0x$5$6 0xffff at -4 match u16 0x0800 0xFFFF at -2 "
+            
+            IFS=$oldIFS
+        else 
+            logger -t "$mShaper" "setTcFilterIngress: wrong mac/ip [$ip] [$subnetmask] [$mac]." 
+            exit 1
+        fi
+    else
+        local tc="$tc match ip dst $ip/$subnetmask "
+    fi
+
+    eval "$tc flowid 3:1$flowid"
+
+
+    logger -t "$mShaper" "setTcFilterIngress $ifb ok!"
+}
+
+# start from 3 ifb1 ifb2 already used
+interface_counter=$startIFB
+
+handle_interface() {
+    local interface="$1"
+
+    for inter in tot_dl tot_up; do
+        local $inter
+	    config_get $inter "$interface" $inter
+    done
+
+    logger -t "$mShaper" "handle_interface: interface => $interface"
+    logger -t "$mShaper" "handle_interface: tot_dl => $tot_dl"
+    logger -t "$mShaper" "handle_interface: tot_up => $tot_up"
+
+    createIfbInterface $interface_counter
+
+    setTcInterfaceEgress $interface
+    setTcInterfaceIngress $interface $interface_counter
+
+    local class_counter=1
+
+    handle_class() {
+        local class=$1
+
+        if [ -z "$class" ]; then
+            logger -t "$mShaper" "handle_class: $interface no class name specified."
+            exit 1
+        fi
+  
+        for cl in dl ul; do
+            local $cl
+	        config_get $cl "$class" $cl 
+        done
+         
+        logger -t "$mShaper" "handle_class: class => $class"
+        logger -t "$mShaper" "handle_class: dl => $dl"        
+        logger -t "$mShaper" "handle_class: ul => $ul"
+
+        if [ -z $dl ] || [ -z $ul ]; then         
+            setTcClassEgress $interface $class_counter $tot_up 
+            setTcClassIngress $interface_counter $class_counter $tot_dl
+        else
+            setTcClassEgress $interface $class_counter $ul 
+            setTcClassIngress $interface_counter $class_counter $dl
+        fi
+
+        handle_filter() {
+            local filter="$1"
+
+            for tfi in ip subnetmask mac; do
+                local $tfi
+                config_get $tfi "$filter" $tfi
+            done
+
+            logger -t "$mShaper" "handle_filter: filter => $filter"
+            logger -t "$mShaper" "handle_filter: ip => $ip"     
+            logger -t "$mShaper" "handle_filter: subnetmask => $subnetmask"
+            logger -t "$mShaper" "handle_filter: mac => $mac"
+
+            setTcFilterEgress $interface $class_counter $ip $subnetmask $mac
+            setTcFilterIngress $interface_counter $class_counter $ip $subnetmask $mac
+        }
+
+        # iterate over class in this interface
+        config_list_foreach "$class" filter handle_filter
+
+        # increment class id for this interface
+        class_counter=$(($class_counter + 1))
+    }    
+
+    # init default first class (one time)
+    setTcFirstClassEgress $interface $tot_up 
+    setTcFirstClassIngress $interface_counter $tot_dl
+    
+    # iterate over interface 
+    config_list_foreach "$interface" class handle_class
+
+    interface_counter=$(($interface_counter + 1))
+}
+
+stop() {
+    local stop_interface_counter=$startIFB
+    handle_interface_stop() {
+        local interface=$1
+        
+        removeInterfaceTc $interface 
+        removeIfbIterface $stop_interface_counter
+
+        stop_interface_counter=$(($stop_interface_counter + 1))
+    }
+    config_foreach handle_interface_stop interface
+}
+
+if [ "$1" = "stop" ]; then 
+    stop
+elif [ "$1" = "start" ] || [ "$1" = "reload" ]; then
+    stop
+    set -e
+    config_foreach handle_interface interface
+fi
+
+
+
+

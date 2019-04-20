@@ -1,0 +1,23 @@
+config interface 'eth5'  
+    option 'tot_dl' '3000kbit' 
+    option 'tot_up' '30000kbit'
+    list class '7mb'
+    
+config interface 'wl0'  
+    option 'tot_dl' '3000kbit' 
+    option 'tot_up' '30000kbit'
+    list class '7mb'
+
+config class '7mb' 
+    option 'dl' '324kbit'
+    option 'ul' '7000kbit'  
+    list filter 'tv'
+    list filter 'tablet'
+
+config filter 'tv' 
+    option 'mac' 'XX:XX:XX:XX:XX:XX'
+
+config filter 'tablet'
+    option 'ip' '192.168.1.25'
+    option 'subnetmask' '32'
+
