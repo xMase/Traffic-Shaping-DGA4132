@@ -7,13 +7,12 @@ Traffic Shaping DGA4132
 [![License](https://img.shields.io/github/license/xMase/Traffic-Shaping-DGA4132.svg)](https://github.com/xMase/Traffic-Shaping-DGA4132)
 
  
-It is a useful script to easily configure traffic shaping on Tim DGA4132 (***TimHub***).
-This script uses qdisc with htb and sfq comequeuing disciplines
-
+It is a useful script to easily configure traffic shaping on Tim DGA4132 (***TimHub***)<br>
+This script uses **qdisc** with **htb** as traffic shaper and **sfq** as comequeuing disciplines.
 
 **To avoid incompatibility with the technicolor standard QoS it will be disabled once it is installed and re-enabled upon uninstallation.**
 
-<span style="color:red; ">**it is highly recommended to disable ipv6.**</span>
+<span style="color:red">**it is highly recommended to disable ipv6.**</span>
 
 Installation
 ============
@@ -21,7 +20,7 @@ Installation
 Download **[setup.sh](https://github.com/xMase/Traffic-Shaping-DGA4132/releases/latest)** to /tmp directory, change permissions with **chmod + x /tmp/setup.sh** and run it.
 
 Configuration
-============
+=============
 
 Change the **test** configuration located in **/etc/config/mshaper**
 
@@ -83,6 +82,21 @@ config filter 'tablet'
     option 'subnetmask' '32'
 ```
 
+Usage
+=====
 
+Default operations:
 
+- **/etc/init.d/mshaper <span style="color:red">enable</span>** => to enable the script
+- **/etc/init.d/mshaper <span style="color:red">start</span>** => to start the script
+- **/etc/init.d/mshaper <span style="color:red">stop</span>** => to stop the script
+- **/etc/init.d/mshaper <span style="color:red">disable</span>** => to disable the script
 
+Debug:
+
+- **logread** => to read mshaper log
+
+Contribute code
+===============
+
+If you have any **ideas**/**solutions**/**improvements** to be included in this project, **feel free to submit a pull request**.
