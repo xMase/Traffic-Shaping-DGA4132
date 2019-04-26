@@ -30,7 +30,7 @@ I remember that:
 - **eth5** => is the 5Ghz wifi interface
 - **wl0** => is the 2.4Ghz wifi interface
 
-in the interface/class section:
+in the **interface/class** section:
 
 - **downlink** => upload 
 - **uplink** => download
