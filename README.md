@@ -12,7 +12,7 @@ This script uses **qdisc** with **htb** as traffic shaper and **sfq** as comeque
 
 **To avoid incompatibility with the technicolor standard QoS it will be disabled once it is installed and re-enabled upon uninstallation.**
 
-<span style="color:red">**it is highly recommended to disable ipv6.**</span>
+***it is highly recommended to disable ipv6.***
 
 Installation
 ============
@@ -87,10 +87,10 @@ Usage
 
 Default operations:
 
-- /etc/init.d/mshaper **enable**  => to enable the script on starup
+- /etc/init.d/mshaper **enable**  => to enable the script ***on starup***
 - /etc/init.d/mshaper **start** => to start the script
 - /etc/init.d/mshaper **stop** => to stop the script
-- /etc/init.d/mshaper **disable** => to disable the script on starup
+- /etc/init.d/mshaper **disable** => to disable the script ***on starup***
 
 Debug:
 
