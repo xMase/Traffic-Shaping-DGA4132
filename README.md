@@ -87,10 +87,10 @@ Usage
 
 Default operations:
 
-- **/etc/init.d/mshaper <span style="color:red">enable</span>** => to enable the script
-- **/etc/init.d/mshaper <span style="color:red">start</span>** => to start the script
-- **/etc/init.d/mshaper <span style="color:red">stop</span>** => to stop the script
-- **/etc/init.d/mshaper <span style="color:red">disable</span>** => to disable the script
+- /etc/init.d/mshaper **enable**  => to enable the script on starup
+- /etc/init.d/mshaper **start** => to start the script
+- /etc/init.d/mshaper **stop** => to stop the script
+- /etc/init.d/mshaper **disable** => to disable the script on starup
 
 Debug:
 
