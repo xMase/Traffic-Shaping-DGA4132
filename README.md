@@ -22,7 +22,7 @@ Download **[setup.sh](https://github.com/xMase/Traffic-Shaping-DGA4132/releases/
 Configuration
 =============
 
-Change the **test** configuration located in **/etc/config/mshaper**
+Change the **test** configuration located in **/etc/config/mshaper**.
 
 I remember that:
 
@@ -30,7 +30,7 @@ I remember that:
 - **eth5** => is the 5Ghz wifi interface
 - **wl0** => is the 2.4Ghz wifi interface
 
-in the **interface/class** section:
+In **interface/class** section:
 
 - **downlink** => upload 
 - **uplink** => download
