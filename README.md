@@ -8,7 +8,7 @@ Traffic Shaping DGA4132
 
  
 It is a useful script to easily configure traffic shaping on Tim DGA4132 (***TimHub***)<br>
-This script uses **qdisc** with **htb** as traffic shaper and **sfq** as comequeuing disciplines.
+This script uses **qdisc** with **htb** as traffic shaper and **sfq** as queuing disciplines.
 
 **To avoid incompatibility with the technicolor standard QoS it will be disabled once it is installed and re-enabled upon uninstallation.**
 
