@@ -1,7 +1,7 @@
 Traffic Shaping DGA4132
 =======================
 
-[![Latest Stable Version](https://img.shields.io/github/release/xMase/Traffic-Shaping-DGA4132.svg)](https://github.com/xMase/Traffic-Shaping-DGA4132)
+[![Latest Stable Version](https://img.shields.io/github/release/xmase/Traffic-Shaping-DGA4132.svg)](https://github.com/xMase/Traffic-Shaping-DGA4132)
 [![Downloads](https://img.shields.io/github/downloads/xMase/Traffic-Shaping-DGA4132/total.svg)](https://github.com/xMase/Traffic-Shaping-DGA4132)
 [![Repo Size](https://img.shields.io/github/repo-size/xMase/Traffic-Shaping-DGA4132.svg)](https://github.com/xMase/Traffic-Shaping-DGA4132)
 [![License](https://img.shields.io/github/license/xMase/Traffic-Shaping-DGA4132.svg)](https://github.com/xMase/Traffic-Shaping-DGA4132)
@@ -14,10 +14,25 @@ This script uses **qdisc** with **htb** as traffic shaper and **sfq** as queuing
 
 ***it is highly recommended to disable ipv6.***
 
-Installation
-============
+Install
+=======
 
-Download **[setup.sh](https://github.com/xMase/Traffic-Shaping-DGA4132/releases/latest)** to /tmp directory, change permissions with **chmod + x /tmp/setup.sh** and run it.
+From a shell interface run:
+
+```sh
+wget --no-check-certificate https://github.com/xMase/Traffic-Shaping-DGA4132/releases/latest/download/mShaper.tar.gz -O /tmp/mShaper.tar.gz
+mkdir /tmp/mShaper; tar xvzf /tmp/mShaper.tar.gz -C /tmp/mShaper && chmod +x /tmp/mShaper/setup.sh
+/tmp/mShaper/setup.sh install
+```
+
+Uninstall
+=========
+
+From a shell interface run:
+
+```sh
+/tmp/mShaper/setup.sh uninstall
+```
 
 Configuration
 =============
