@@ -70,11 +70,11 @@ config class '7mb'
     list filter 'tablet'
     # ...
 
-# filter based on the mac
+# mac based filter
 config filter 'tv'     
     option 'mac' '01:01:01:01:01:01'
 
-#ip based filter
+# ip based filter
 config filter 'tablet'
     option 'ip' '192.168.1.25'
     # IPv4 Subnet Calculator
